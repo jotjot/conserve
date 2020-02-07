@@ -138,16 +138,23 @@ impl BlockDir {
     /// Read back the contents of a block, as a byte array.
     ///
     /// To read a whole file, use StoredFile instead.
-    pub fn get(&self, addr: &Address, report: &Report) -> Result<Vec<u8>> {
-        if addr.start != 0 {
-            unimplemented!();
+    pub fn get(&self, address: &Address, report: &Report) -> Result<Vec<u8>> {
+        let mut buf = self.get_block_content(&address.hash, report)?;
+        let start = address.start as usize;
+        let end = (address.start + address.len) as usize;
+        if address.start + address.len > buf.len() as u64 {
+            return Err(Error::AddressInRange {
+                address: address.clone(),
+            });
         }
-        let decompressed = self.get_block_content(&addr.hash, report)?;
-        // TODO: Accept addresses referring to only part of a block.
-        if decompressed.len() != addr.len as usize {
-            unimplemented!();
+        // TODO: Cache retrieved blocks, in case they're read again soon.
+        // In particular that's likely to happen with combined blocks.
+        if address.start > 0 {
+            Ok(buf[start..end].to_vec())
+        } else {
+            buf.truncate(end);
+            Ok(buf)
         }
-        Ok(decompressed)
     }
 
     /// Return a sorted vec of prefix subdirectories.

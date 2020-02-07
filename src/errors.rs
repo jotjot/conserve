@@ -25,6 +25,9 @@ pub enum Error {
     #[snafu(display("Failed to read block {:?}", path))]
     ReadBlock { path: PathBuf, source: IOError },
 
+    #[snafu(display("Block address extends beyond end of data: {:?}", address))]
+    AddressInRange { address: blockdir::Address },
+
     #[snafu(display("Failed to list block files in {:?}", path))]
     ListBlocks { path: PathBuf, source: IOError },
 
